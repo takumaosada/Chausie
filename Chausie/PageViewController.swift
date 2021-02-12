@@ -31,6 +31,8 @@ public final class PageViewController: UIViewController {
     /// The view controllers displayed by the page view controller.
     public let viewControllers: ContiguousArray<Child>
 
+    public var isOrientationEnabled = false
+
     /// A index set of child view controller added to the container.
     private struct ChildrenIndices {
         var forward: PageIndex
@@ -195,7 +197,7 @@ public final class PageViewController: UIViewController {
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
 
-        guard viewIfLoaded?.window != nil && scrollView.bounds.width > 0 else { return }
+        guard isOrientationEnabled, viewIfLoaded?.window != nil && scrollView.bounds.width > 0 else { return }
 
         isTransitioning = true
 
