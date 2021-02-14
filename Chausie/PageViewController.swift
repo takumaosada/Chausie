@@ -77,6 +77,10 @@ public final class PageViewController: UIViewController {
     /// Indices of child view controller displayed in the scrollView.
     private var visibleIndices: VisibleIndices
 
+    private var scrollViewWidth: CGFloat {
+        isOrientationEnabled ? scrollView.bounds.width : UIScreen.main.nativeBounds.width
+    }
+
     /// - Parameters:
     ///     - viewControllers: The view controllers displayed by the page view controller.
     ///     - maxChildrenCount: A maximum count of child view controller to add to the container.
@@ -149,8 +153,8 @@ public final class PageViewController: UIViewController {
 
         let initialPageIndex = visibleIndices.forward
         scrollView.delegate = self
-        scrollView.contentSize.width = scrollView.bounds.width * CGFloat(viewControllers.count)
-        scrollView.contentOffset.x = scrollView.bounds.width * CGFloat(initialPageIndex)
+        scrollView.contentSize.width = scrollViewWidth * CGFloat(viewControllers.count)
+        scrollView.contentOffset.x = scrollViewWidth * CGFloat(initialPageIndex)
         delegate?.pageViewController(self, didScrollAtRatio: scrollRatio)
 
         let initailIndices: CountableClosedRange<PageIndex> = {
@@ -170,7 +174,7 @@ public final class PageViewController: UIViewController {
             .prefix(maxChildrenCount)
             .forEach { offset, viewController in
                 viewController.view.frame = CGRect(
-                    origin: CGPoint(x: CGFloat(offset) * scrollView.bounds.width, y: 0),
+                    origin: CGPoint(x: CGFloat(offset) * scrollViewWidth, y: 0),
                     size: scrollView.bounds.size
                 )
                 notifySafeAreaInsets(viewController)
@@ -197,13 +201,13 @@ public final class PageViewController: UIViewController {
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
 
-        guard isOrientationEnabled, viewIfLoaded?.window != nil && scrollView.bounds.width > 0 else { return }
+        guard isOrientationEnabled, viewIfLoaded?.window != nil && scrollViewWidth > 0 else { return }
 
         isTransitioning = true
 
         let currentScrollRatio: CGFloat = {
-            let offsetX = min(scrollView.contentOffset.x, scrollView.bounds.width * CGFloat(viewControllers.count))
-            let ratio = Int(offsetX / scrollView.bounds.width)
+            let offsetX = min(scrollView.contentOffset.x, scrollViewWidth * CGFloat(viewControllers.count))
+            let ratio = Int(offsetX / scrollViewWidth)
             return max(0, CGFloat(ratio))
         }()
 
@@ -242,7 +246,7 @@ public final class PageViewController: UIViewController {
         super.viewDidLayoutSubviews()
 
         if !isTransitioning && !scrollView.isInteracting {
-            scrollView.contentOffset.x = scrollView.bounds.width * CGFloat(visibleIndices.forward)
+            scrollView.contentOffset.x = scrollViewWidth * CGFloat(visibleIndices.forward)
         }
     }
 
@@ -255,7 +259,7 @@ public final class PageViewController: UIViewController {
     public func scrollToPage(at index: PageIndex, animated: Bool) {
         precondition(index <= maxPageIndex, "`index` out of range. Please set `index` within the range of `viewControllers`")
 
-        let contentOffset = CGPoint(x: scrollView.bounds.width * CGFloat(index), y: 0)
+        let contentOffset = CGPoint(x: scrollViewWidth * CGFloat(index), y: 0)
         scrollView.setContentOffset(contentOffset, animated: animated)
 
         if !animated {
@@ -311,8 +315,8 @@ extension PageViewController: UIScrollViewDelegate {
             case didDisappear
         }
 
-        let flooredPageIndex = PageIndex(scrollView.contentOffset.x / scrollView.bounds.width)
-        let ceiledPageIndex = PageIndex(ceil(scrollView.contentOffset.x / scrollView.bounds.width))
+        let flooredPageIndex = PageIndex(scrollView.contentOffset.x / scrollViewWidth)
+        let ceiledPageIndex = PageIndex(ceil(scrollView.contentOffset.x / scrollViewWidth))
 
         guard visibleIndices.forward != ceiledPageIndex || visibleIndices.backword != flooredPageIndex else {
             return
@@ -358,8 +362,8 @@ extension PageViewController: UIScrollViewDelegate {
             case removeFromParent
         }
 
-        let forwardOffset = scrollView.contentOffset.x + scrollView.bounds.width * CGFloat(forwardDistance)
-        let forwardIndex = PageIndex(ceil(forwardOffset / scrollView.bounds.width))
+        let forwardOffset = scrollView.contentOffset.x + scrollViewWidth * CGFloat(forwardDistance)
+        let forwardIndex = PageIndex(ceil(forwardOffset / scrollViewWidth))
         let newForwardIndex = max(minPageIndex, min(maxPageIndex, forwardIndex))
 
         if newForwardIndex != childrenIndices.forward {
@@ -379,8 +383,8 @@ extension PageViewController: UIScrollViewDelegate {
             }
         }
 
-        let backwardOffset = scrollView.contentOffset.x - scrollView.bounds.width * CGFloat(backwardDistance)
-        let backwardIndex = PageIndex((backwardOffset / scrollView.bounds.width))
+        let backwardOffset = scrollView.contentOffset.x - scrollViewWidth * CGFloat(backwardDistance)
+        let backwardIndex = PageIndex((backwardOffset / scrollViewWidth))
         let ajustedIndex = backwardIndex + maxChildrenCount > viewControllers.count
             ? self.viewControllers.count - maxChildrenCount
             : backwardIndex
@@ -409,7 +413,7 @@ extension PageViewController: UIScrollViewDelegate {
     private func addChild(at index: PageIndex) {
         let viewController = viewControllers[index]
         viewController.view.frame = CGRect(
-            origin: CGPoint(x: scrollView.bounds.width * CGFloat(index), y: 0),
+            origin: CGPoint(x: scrollViewWidth * CGFloat(index), y: 0),
             size: scrollView.bounds.size
         )
         notifySafeAreaInsets(viewController)
