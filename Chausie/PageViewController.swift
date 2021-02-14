@@ -203,7 +203,10 @@ public final class PageViewController: UIViewController {
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
 
-        guard isOrientationEnabled, viewIfLoaded?.window != nil && scrollViewWidth > 0 else { return }
+        guard isOrientationEnabled, viewIfLoaded?.window != nil && scrollViewWidth > 0 else {
+            scrollView.contentOffset.x = scrollViewWidth * CGFloat(visibleIndices.forward)
+            return
+        }
 
         isTransitioning = true
 
