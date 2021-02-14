@@ -78,8 +78,8 @@ public final class PageViewController: UIViewController {
     private var visibleIndices: VisibleIndices
 
     private var scrollViewWidth: CGFloat {
-        scrollView.bounds.width > UIScreen.main.nativeBounds.width && !isOrientationEnabled
-            ? UIScreen.main.nativeBounds.width
+        scrollView.bounds.width > (UIScreen.main.nativeBounds.width / UIScreen.main.nativeScale) && !isOrientationEnabled
+            ? (UIScreen.main.nativeBounds.width / UIScreen.main.nativeScale)
             : scrollView.bounds.width
     }
 
